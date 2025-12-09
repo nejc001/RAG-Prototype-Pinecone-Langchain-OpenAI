@@ -1,11 +1,17 @@
 RAG Services (Framework-Agnostic)
 =================================
 
+Install & Build
+---------------
+- Install: `npm install rag-proto`
+- Build (emit ESM + types to `dist/`): `npm run build`
+- Examples live in `src/examples/rag-usage.example.ts`
+
 What’s inside
 -------------
-- `rag.service.ts`: main RAG orchestration (LLM + vector store + prompts + retrieval + rerank + generation + summarization). Supports pluggable rerankers, MMR fallback, context budgeting, observability hook.
-- `text-chunking.service.ts`: chunk text with overlap and return chunks or LangChain `Document`s.
-- `embedding.service.ts`: thin OpenAI embedding client (single + batch).
+- `services/rag.service.ts`: main RAG orchestration (LLM + vector store + prompts + retrieval + rerank + generation + summarization). Supports pluggable rerankers, MMR fallback, context budgeting, observability hook.
+- `services/text-chunking.service.ts`: chunk text with overlap and return chunks or LangChain `Document`s.
+- `services/embedding.service.ts`: thin OpenAI embedding client (single + batch).
 
 How the RAG flow works
 ----------------------
@@ -39,6 +45,8 @@ Quick start (pseudocode)
 ------------------------
 - Init:
   ```ts
+  import { RagService, TextChunkingService } from 'rag-proto';
+
   const rag = new RagService(chatCfg, embeddingCfg, vectorCfg, options, optionalReranker);
   const chunker = new TextChunkingService();
   ```

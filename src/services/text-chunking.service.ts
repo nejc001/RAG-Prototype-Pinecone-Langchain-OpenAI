@@ -1,9 +1,9 @@
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { Document } from '@langchain/core/documents';
 import { v4 as uuidv4 } from 'uuid';
-import { VectorStorageMetadata } from '../interfaces/vector-storage-metadata.interface';
-import { ChunkingOptions } from '../interfaces/chunking-options.interface';
-import { DocumentChunk } from '../interfaces/document-chunk.interface';
+import { VectorStorageMetadata } from '../interfaces/vector-storage-metadata.interface.js';
+import { ChunkingOptions } from '../interfaces/chunking-options.interface.js';
+import { DocumentChunk } from '../interfaces/document-chunk.interface.js';
 
 /**
  * Framework-agnostic text chunking service.

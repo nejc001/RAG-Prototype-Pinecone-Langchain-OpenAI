@@ -1,4 +1,4 @@
-import { VectorStorageMetadata } from './vector-storage-metadata.interface';
+import { VectorStorageMetadata } from './vector-storage-metadata.interface.js';
 
 /**
  * Interface representing a document chunk with its content and metadata.

@@ -5,13 +5,13 @@
  * The examples show common use cases for document chunking, embedding, and RAG pipelines.
  */
 
-import { RagService, LlmConfig, VectorStoreConfig } from '../services/rag.service';
-import { EmbeddingService } from '../services/embedding.service';
-import { TextChunkingService } from '../services/text-chunking.service';
-import { LlmProviderEnum } from '../enums/llm-provider.enum';
-import { VectorStoreProviderEnum } from '../enums/vector-store-provider.enum';
-import { VectorStorageDocumentTypeEnum } from '../enums/vector-storage-document-type.enum';
-import { VectorStorageMetadata } from '../interfaces/vector-storage-metadata.interface';
+import { RagService, LlmConfig, VectorStoreConfig } from '../services/rag.service.js';
+import { EmbeddingService } from '../services/embedding.service.js';
+import { TextChunkingService } from '../services/text-chunking.service.js';
+import { LlmProviderEnum } from '../enums/llm-provider.enum.js';
+import { VectorStoreProviderEnum } from '../enums/vector-store-provider.enum.js';
+import { VectorStorageDocumentTypeEnum } from '../enums/vector-storage-document-type.enum.js';
+import { VectorStorageMetadata } from '../interfaces/vector-storage-metadata.interface.js';
 import { Document } from '@langchain/core/documents';
 
 /**

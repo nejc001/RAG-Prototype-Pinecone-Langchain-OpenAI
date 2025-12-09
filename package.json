@@ -1,10 +1,23 @@
 {
-  "name": "@prodigy-core/lib-shared-ts",
-  "version": "0.0.1",
-  "private": true,
-  "type": "commonjs",
-  "main": "./index.cjs",
-  "types": "./index.d.ts",
+  "name": "rag-proto",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist"
+  },
   "dependencies": {
     "@langchain/core": "^0.3.45",
     "@langchain/langgraph": "^0.2.65",
@@ -15,5 +28,8 @@
     "openai": "^4.95.1",
     "uuid": "^11.1.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.6.3"
+  }
 }

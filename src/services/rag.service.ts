@@ -6,10 +6,9 @@ import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { Annotation, CompiledStateGraph, StateGraph } from '@langchain/langgraph';
 import { MessageContentComplex } from '@langchain/core/messages';
 import { loadSummarizationChain } from 'langchain/chains';
-import { LlmProviderEnum } from '../enums/llm-provider.enum';
-import { VectorStoreProviderEnum } from '../enums/vector-store-provider.enum';
-import { VectorStorageMetadata } from '../interfaces/vector-storage-metadata.interface';
-import { cosineSimilarity } from '../utils/vector.util';
+import { LlmProviderEnum } from '../enums/llm-provider.enum.js';
+import { VectorStoreProviderEnum } from '../enums/vector-store-provider.enum.js';
+import { VectorStorageMetadata } from '../interfaces/vector-storage-metadata.interface.js';
 
 /**
  * Configuration for LLM provider
@@ -177,6 +176,46 @@ ${optionalPrompts?.contextPrompt ?? 'Here is context you might find useful:'}
       const vectorStore = this.getOrCreateNamespaceVectorStore(namespace);
       this.emit('retrieve:start', { namespace, query: state.question, productId: state.productId });
 
+      // Custom reranker path
+      if (this.reranker) {
+        const retrievedDocsWithScores = await vectorStore.similaritySearchWithScore(
+          state.question,
+          this.options.retrieveK ?? 12,
+          {
+            productId: state.productId,
+          }
+        );
+
+        const filtered = this.options.filter
+          ? retrievedDocsWithScores.filter(([doc]) => this.options.filter!(doc))
+          : retrievedDocsWithScores;
+
+        const rerankedDocs = await this.reranker.rerank(
+          state.question,
+          filtered.map(([doc, score]) => ({ doc, score }))
+        );
+        const topContext = rerankedDocs.slice(0, this.options.rerankK ?? 5);
+        this.emit('retrieve:done', { retrieved: filtered.length, used: topContext.length });
+        return { context: topContext };
+      }
+
+      // Built-in MMR path (preferred)
+      if (this.options.enableMmrRerank !== false) {
+        const mmrResults = await vectorStore.maxMarginalRelevanceSearch(state.question, {
+          k: this.options.rerankK ?? 5,
+          fetchK: this.options.retrieveK ?? 12,
+          lambda: this.options.mmrLambda ?? 0.5,
+          filter: {
+            productId: state.productId,
+          },
+        });
+
+        const filtered = this.options.filter ? mmrResults.filter((doc) => this.options.filter!(doc)) : mmrResults;
+        this.emit('retrieve:done', { retrieved: filtered.length, used: filtered.length });
+        return { context: filtered };
+      }
+
+      // Fallback: simple similarity search with score sorting
       const retrievedDocsWithScores = await vectorStore.similaritySearchWithScore(
         state.question,
         this.options.retrieveK ?? 12,
@@ -189,11 +228,13 @@ ${optionalPrompts?.contextPrompt ?? 'Here is context you might find useful:'}
         ? retrievedDocsWithScores.filter(([doc]) => this.options.filter!(doc))
         : retrievedDocsWithScores;
 
-      const rerankedDocs = await this.rerank(state.question, filtered);
-      const topContext = rerankedDocs.slice(0, this.options.rerankK ?? 5);
+      const sorted = filtered
+        .sort(([, scoreA], [, scoreB]) => (scoreB ?? 0) - (scoreA ?? 0))
+        .map(([doc]) => doc)
+        .slice(0, this.options.rerankK ?? 5);
 
-      this.emit('retrieve:done', { retrieved: filtered.length, used: topContext.length });
-      return { context: topContext };
+      this.emit('retrieve:done', { retrieved: filtered.length, used: sorted.length });
+      return { context: sorted };
     };
 
     const packContextWithBudget = (docs: DocumentInterface[]): string => {
@@ -360,68 +401,5 @@ ${optionalPrompts?.contextPrompt ?? 'Here is context you might find useful:'}
     }
   }
 
-  /**
-   * Rerank documents using provided reranker, fallback to MMR, then to score sort.
-   */
-  private async rerank(
-    query: string,
-    candidates: Array<[DocumentInterface, number | undefined]>
-  ): Promise<DocumentInterface[]> {
-    if (candidates.length === 0) return [];
-
-    // External reranker
-    if (this.reranker) {
-      const docs = await this.reranker.rerank(
-        query,
-        candidates.map(([doc, score]) => ({ doc, score }))
-      );
-      return docs;
-    }
-
-    // MMR fallback using embeddings
-    if (this.options.enableMmrRerank) {
-      const rerankK = this.options.rerankK ?? 5;
-      const lambda = this.options.mmrLambda ?? 0.5;
-      const queryEmbedding = await this.embeddings.embedQuery(query);
-
-      const docsWithEmbeddings = await Promise.all(
-        candidates.map(async ([doc, score]) => ({
-          doc,
-          score: score ?? 0,
-          embedding: await this.embeddings.embedQuery(doc.pageContent || ''),
-        }))
-      );
-
-      const selected: typeof docsWithEmbeddings = [];
-      const remaining = [...docsWithEmbeddings];
-
-      while (selected.length < rerankK && remaining.length > 0) {
-        let bestIdx = 0;
-        let bestScore = -Infinity;
-        for (let i = 0; i < remaining.length; i++) {
-          const cand = remaining[i];
-          const relevance = cosineSimilarity(queryEmbedding, cand.embedding);
-          const diversity =
-            selected.length === 0
-              ? 0
-              : Math.max(...selected.map((s) => cosineSimilarity(s.embedding, cand.embedding)));
-          const mmrScore = lambda * relevance - (1 - lambda) * diversity;
-          if (mmrScore > bestScore) {
-            bestScore = mmrScore;
-            bestIdx = i;
-          }
-        }
-        selected.push(remaining[bestIdx]);
-        remaining.splice(bestIdx, 1);
-      }
-
-      return selected.map((s) => s.doc);
-    }
-
-    // Fallback: simple score sort
-    return candidates
-      .sort(([, scoreA], [, scoreB]) => (scoreB ?? 0) - (scoreA ?? 0))
-      .map(([doc]) => doc);
-  }
 }
 

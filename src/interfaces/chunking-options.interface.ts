@@ -1,4 +1,4 @@
-import { LlmProviderEnum } from '../enums/llm-provider.enum';
+import { LlmProviderEnum } from '../enums/llm-provider.enum.js';
 
 /**
  * Options for text chunking operations

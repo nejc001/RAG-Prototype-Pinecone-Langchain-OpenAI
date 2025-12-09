@@ -1,4 +1,4 @@
-import { VectorStorageDocumentTypeEnum } from '../enums/vector-storage-document-type.enum';
+import { VectorStorageDocumentTypeEnum } from '../enums/vector-storage-document-type.enum.js';
 
 export interface VectorStorageMetadata {
   fileName: string; // original file name
