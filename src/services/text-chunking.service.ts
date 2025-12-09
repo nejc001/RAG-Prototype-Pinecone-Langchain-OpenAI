@@ -4,12 +4,28 @@ import { v4 as uuidv4 } from 'uuid';
 import { VectorStorageMetadata } from '../interfaces/vector-storage-metadata.interface.js';
 import { ChunkingOptions } from '../interfaces/chunking-options.interface.js';
 import { DocumentChunk } from '../interfaces/document-chunk.interface.js';
+import { ChunkingDefaultsConfig } from '../interfaces/chunking-defaults-config.interface.js';
+
+/**
+ * Default chunking configuration constants
+ */
+const DEFAULT_CHUNKING_CONFIG: Required<ChunkingDefaultsConfig> = {
+  chunkSize: 1000,
+  overlap: 200,
+  separators: ['## ', '# ', '### ', '\n\n', '\n', ' ', ''],
+};
 
 /**
  * Framework-agnostic text chunking service.
  * Splits text into chunks with configurable size and overlap.
  */
 export class TextChunkingService {
+  private readonly defaultConfig: Required<ChunkingDefaultsConfig>;
+
+  constructor(defaultConfig?: ChunkingDefaultsConfig) {
+    this.defaultConfig = { ...DEFAULT_CHUNKING_CONFIG, ...defaultConfig };
+  }
+
   /**
    * Chunk text into smaller pieces with metadata
    * @param text - The text to chunk
@@ -23,9 +39,9 @@ export class TextChunkingService {
     options: ChunkingOptions = {}
   ): Promise<DocumentChunk[]> {
     const {
-      chunkSize = 1000,
-      overlap = 200,
-      separators = ['## ', '# ', '### ', '\n\n', '\n', ' ', ''],
+      chunkSize = this.defaultConfig.chunkSize,
+      overlap = this.defaultConfig.overlap,
+      separators = this.defaultConfig.separators,
     } = options;
 
     const splitter = new RecursiveCharacterTextSplitter({

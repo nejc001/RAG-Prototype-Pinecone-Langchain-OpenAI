@@ -10,6 +10,10 @@ export type { LlmConfig, VectorStoreConfig, RagPrompts, RagOptions, Reranker } f
 export type { VectorStorageMetadata } from './interfaces/vector-storage-metadata.interface.js';
 export type { DocumentChunk } from './interfaces/document-chunk.interface.js';
 export type { ChunkingOptions } from './interfaces/chunking-options.interface.js';
+export type { LlmParamsConfig } from './interfaces/llm-params-config.interface.js';
+export type { DefaultPromptsConfig } from './interfaces/default-prompts-config.interface.js';
+export type { ChunkingDefaultsConfig } from './interfaces/chunking-defaults-config.interface.js';
+export type { EmbeddingConfig } from './interfaces/embedding-config.interface.js';
 
 // Enums
 export { CloudStorageProviderEnum } from './enums/cloud-storage-provider.enum.js';
